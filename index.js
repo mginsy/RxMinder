@@ -8,6 +8,7 @@ const accountSid = process.env.accountSID;
 const authToken =  process.env.authToken;
 const client = require('twilio')(accountSid, authToken);
 
+// data is the object that gets changed and passed around the UI and particle
 let data = {};
 
 const corsOptions ={
@@ -30,7 +31,7 @@ app.get("/getData", (req, res) => {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Insert endpoint
+// This is an endpoint that the front end UI calls to submit the medication schedule for the particle to receive.
 app.post("/add", (req, res) => {
   const medicationName = req.body.medication;
   const scheduleTime = req.body.time;
@@ -53,6 +54,7 @@ app.post("/add", (req, res) => {
   res.sendStatus(200);
 }); 
 
+// when the pill is successfully taken, the particle calls this endpoint and the data object is updated with the time it was taken + that it was in fact taken
 app.post("/taken", (req, res) => {
   data.taken = true;
 
@@ -73,7 +75,8 @@ app.post("/taken", (req, res) => {
   res.sendStatus(200);
 }); 
 
-app.post("/test", (req, res) => {
+// this endpoint uses the twilio API to call the patient and caregiver when the medication is ready. It uses the data from the schedule when the UI calls the add endpoint and gets triggered when the particle calls this endpoint
+app.post("/call", (req, res) => {
   console.log("hi"); 
 
   let toCaregiverPhone = "+1" + data.caregiverPhone;
@@ -87,13 +90,13 @@ app.post("/test", (req, res) => {
        })
       .then(call => console.log(call.sid));
 
-  /*client.calls
+  client.calls
       .create({
          twiml: '<Response><Say>Hello, this is reminder, your medication is ready. Please go pick it up.</Say></Response>',
          to: toPatientPhone,
          from: '+18643852438'
        })
-      .then(call => console.log(call.sid));*/
+      .then(call => console.log(call.sid));
 
   res.sendStatus(200);
 }); 
